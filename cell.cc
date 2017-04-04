@@ -6,6 +6,8 @@
 
 void Cell::attachNbor( Cell* cell ) { nbors.emplace_back( cell );  }
 
+std::vector<Cell*>* Cell::getNbors() { return &nbors; }
+
 void Cell::notifyNbors()
 {
   for ( auto it = nbors.begin(); it != nbors.end(); ++it ) (*it)->notify( *this );
@@ -117,6 +119,7 @@ bool Cell::getPmov() const { return pmov; }
 bool Cell::getStair() const {return stair; }
 bool Cell::getPot() const { return pot; }
 bool Cell::getTre() const { return tre; }
+bool Cell::getDh() const { return dh;}
 std::string Cell::getTreasure() const { return name; }
 void Cell::unSet() {
  
@@ -137,30 +140,58 @@ void Cell::set( Character* cp1 )
     cp = cp1;
     emov = false;
     pmov = false;
+    cp->mutRow( row );
+    cp->mutCol( col );
 }
 
 void Cell::notify( Cell &whoNotified )
 {
 	if ( whoNotified.cp->getType() == "player" ) { 
-		if ( cp && cp->getRace() != "Dragon" )  static_cast<Player*>(whoNotified.cp)->attackedBy( *static_cast<Enemy*>(cp) ); 
-		else if ( cp && pot ) std::cout << "potion is near" << std::endl;
-		if ( dh ) 
+		if ( cp && cp->getRace() != "Dragon" )  
 		{
-			std::cout << "here1" << std::endl;
-
+			int hp = whoNotified.cp->getHP();
+			std::string symb;
+			std::stringstream ss;
+                        ss << cp->getSymbol();
+			ss >> symb;
+			static_cast<Player*>(whoNotified.cp)->attackedBy( *static_cast<Enemy*>(cp) ); 
+			if ( hp == whoNotified.cp->getHP() )
+                        {
+				if ( cp->getRace() == "Merchant" && !Merchant::agro ) return;
+				whoNotified.cp->addToAct(" " + symb + " attack missed!");
+                        	return;
+                        }
+                        double a = cp->getAtk();
+                        double b = whoNotified.cp->getDef();
+                        int dmg = ceil( ( 100 / ( 100 + b )  ) * a );
+                        std::string sdmg = std::to_string(dmg);
+                        whoNotified.cp->addToAct(" and " + symb + " deals " + sdmg + " to PC." );
+                        return;	
+		}
+		else if ( pot ) whoNotified.cp->addToAct( " and sees an unkown potion.");
+		if ( whoNotified.getDh() ) whoNotified.getCp()->clearAct();
+		if ( dh || whoNotified.getDh() ) 
+		{
+			if ( dh ) whoNotified.getCp()->clearAct();
 			for ( auto it = nbors.begin(); it != nbors.end(); ++it )
 			{
-				std::cout << "here1" << std::endl;
-
 				if ( (*it)->cp && (*it)->cp->getRace() == "Dragon"  ){ 
-					std::cout << "here1" << std::endl;
-
+					int hp = whoNotified.cp->getHP();
 					static_cast<Player*>(whoNotified.cp)->attackedBy(*static_cast<Enemy*>((*it)->cp) );
+					whoNotified.cp->addToAct(" and is near a DH.");
+					if ( hp == whoNotified.cp->getHP() )
+					{ 
+						whoNotified.cp->addToAct(" D attack missed!");
+						return;
+					}
+					double a = (*it)->cp->getAtk();
+					double b = whoNotified.cp->getDef();
+ 					int dmg = ceil( ( 100 / ( 100 + b )  ) * a );
+					std::string sdmg = std::to_string(dmg);
+  					whoNotified.cp->addToAct(" D deals " + sdmg + " to PC." );
 					return;
 				}
 			}	
-			tre = true;
-			dh = false;
 		}
 	}
 }
@@ -225,4 +256,17 @@ void Cell::removeTreasure()
   tre = false;
   dh = false;
   name = "tile";
+}
+
+void Cell::unSetDh()
+{
+  for ( auto it = nbors.begin(); it != nbors.end(); ++it )
+    {
+      if ( (*it)->dh )
+      {
+        (*it)->dh = false;
+        (*it)->tre = true;
+        break;
+      }
+    }
 }

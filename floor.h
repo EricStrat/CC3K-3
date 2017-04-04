@@ -19,24 +19,29 @@
 #include "Normal.h"
 #include "DragonHoard.h"
 #include "MerchantHoard.h"
+#include "result.h"
+#include <stdexcept>
 class Floor 
 { 
   std::vector<std::vector<Cell*>> theFloor;
   std::vector<Chamber*> theChambers;
   std::vector<Character*> theEnemies;
-  
+  std::string action; 
+  bool readMap;
   int level, len, wid;
-  
   Player* mainChar;
 
   public:
   
-  Floor( int lvl, std::string cmd );
+  std::ifstream& file;
+
+  Floor( int lvl, std::ifstream& file, bool readMap, std::string cmd );
   ~Floor();
   void clearFloor();
   void move( Character* cp1, std::string direction );
   void moveEnemies();
-  void init();
+  void init( std::ifstream& file );
+  void clearAction();
   std::string isWon();
   bool isAtStairs();
   bool isAtPotion();
@@ -44,10 +49,9 @@ class Floor
   void consumePotion();
   void consumeTreasure( std::string s );
   void set(int r, int c, Character* pc1 );
-  Player* getMainChar();    
+  Player* getMainChar();
   void newTurn();
   void attack(std::string direction);
-  void gameOver();
   void slainEnemy( Enemy* e );
   friend std::ostream &operator<<(std::ostream &out, const Floor &f);
 };

@@ -8,13 +8,19 @@ Merchant::~Merchant() {}
 void Merchant::attack( Shade &p )
 {
   if (Merchant::agro)
-  { 
+  {
     if ( fiftyFifty() )
     {
       int dmg = damage( p );
-      std::cout << dmg << std::endl;
       p.mutHP( -dmg );
-      std::cout << p.getHP() << std::endl;
+      act = "";
+      std::string sdmg = std::to_string(dmg);
+      act = " M deals " + sdmg + " to PC" ;
+    }
+    else
+    {
+      act = "";
+      act = " M Attack missed! PC ";
     }
   }
 }
@@ -26,9 +32,15 @@ void Merchant::attack( Drow &p )
     if ( fiftyFifty() )
     {
       int dmg = damage( p );
-      std::cout << dmg << std::endl;
       p.mutHP( -dmg );
-      std::cout << p.getHP() << std::endl;
+      act = "";
+      std::string sdmg = std::to_string(dmg);
+      act = " M deals " + sdmg + " to PC" ;
+    }
+    else
+    {
+      act = "";
+      act = " M Attack missed! PC ";
     }
   }
 }
@@ -40,9 +52,15 @@ void Merchant::attack( Vampire &p )
     if ( fiftyFifty() )
     {
       int dmg = damage( p );
-      std::cout << dmg << std::endl;
       p.mutHP( -dmg );
-      std::cout << p.getHP() << std::endl;
+      act = "";
+      std::string sdmg = std::to_string(dmg);
+      act = " M deals " + sdmg + " to PC" ;
+    }
+    else
+    {
+      act = "";
+      act = " M Attack missed! PC ";
     }
   }
 }
@@ -54,9 +72,15 @@ void Merchant::attack( Troll &p )
     if ( fiftyFifty() )
     {
       int dmg = damage( p );
-      std::cout << dmg << std::endl;
       p.mutHP( -dmg );
-      std::cout << p.getHP() << std::endl;
+      act = "";
+      std::string sdmg = std::to_string(dmg);
+      act = " M deals " + sdmg + " to PC" ;
+    }
+    else
+    {
+      act = "";
+      act = " M Attack missed! PC ";
     }
   }
 }
@@ -68,8 +92,15 @@ void Merchant::attack( Goblin &p )
     if ( fiftyFifty() )
     {
       int dmg = damage( p );
-      std::cout << dmg << std::endl;
       p.mutHP( -dmg );
+      act = "";
+      std::string sdmg = std::to_string(dmg);
+      act = " M deals " + sdmg + " to PC" ;
+    }
+    else
+    {
+      act = "";
+      act = " M Attack missed! PC ";
     }
   }
 }
@@ -78,5 +109,6 @@ void Merchant::attackedBy( Player &p )
 { 
   Merchant::agro = true;
   p.attack( *this ); 
+  p.attackedBy( *this );
 }
 

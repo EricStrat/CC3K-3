@@ -3,7 +3,7 @@
 std::string Character::getInfo() { return race; }
 
 void Character::slain() {}
-
+int Character::getScore() { return gold; }
 int Character::getHP() { return HP; }
 int Character::getBaseHP() { return baseHP; }
 int Character::getAtk() { return atk; }
@@ -21,6 +21,7 @@ void Character::setAtk( int i ) { atk = i; }
 void Character::setDef( int i ) { def = i; }
 void Character::setGold( int i ) { gold = i; }
 bool Character::getDead(){ return dead; }
+std::string Character::getAct() { return act; }
 Character & Character:: operator=(const Character &other)
 {
   if(this == &other) return *this;
@@ -88,6 +89,8 @@ void Character::mutGold( int i )
   if ( gold < 0 ) gold = 0;
 }
 
+void Character::clearAct() { act = ""; }
+void Character::addToAct( std::string s ) { act = act + s; }
 
 Character::Character( int HP, int baseHP, int atk, int baseAtk, int def, int baseDef, int gold, std::string race, char symbol, std::string type)
 : HP{HP}, baseHP{baseHP}, atk{atk}, baseAtk{baseAtk},

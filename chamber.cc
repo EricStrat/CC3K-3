@@ -18,7 +18,7 @@ void Chamber::placeChar( Character* cp )
 {
   int x = rand() % theChamber.size();
   theChamber.at( x )->set( cp );
-  cp->mutRow( theChamber.at( x )->getRow() );
-  cp->mutCol( theChamber.at( x )->getCol() );
+//  cp->mutRow( theChamber.at( x )->getRow() );
+//  cp->mutCol( theChamber.at( x )->getCol() );
   remove( x );
 }

@@ -15,64 +15,90 @@ void Vampire::mutHP( int i )
 
 void Vampire::attack( Human &e )
 {
-  std::cout << "Vampire Attacks Human" << std::endl;
   int dmg = damage( e );
   e.mutHP( -dmg );
+  act = "";
   mutHP( 5 );
+  std::string sdmg = std::to_string(dmg);
+  std::string hp = std::to_string(e.getHP());
+  act = " PC deals " + sdmg + " to H (" + hp + " HP)." ;
+
 }
 
 void Vampire::attack( Dwarf &e )
 {
-  std::cout << "Vampire Attacks Dwarf" << std::endl;
+  act = "";
   int dmg = damage( e );
   e.mutHP( -dmg );
   mutHP( -5 );
+  std::string sdmg = std::to_string(dmg);
+  std::string hp = std::to_string(e.getHP());
+  act = " PC deals " + sdmg + " to W (" + hp + " HP)." ;
+
 }
 
 void Vampire::attack( Elf &e )
 {
-  std::cout << "Vampire Attacks Elf" << std::endl;
+  act = "";
   int dmg = damage( e );
   e.mutHP( -dmg );
   mutHP( 5 );
+  std::string sdmg = std::to_string(dmg);
+  std::string hp = std::to_string(e.getHP());
+  act = " PC deals " + sdmg + " to E (" + hp + " HP)." ;
+
 }
 
 void Vampire::attack( Orc  &e )
-{
-  std::cout << "SVampire Attacks Orc" << std::endl;
+{  
+  act = "";
   int dmg = damage( e );
   e.mutHP( -dmg );
   mutHP( 5 );
+  std::string sdmg = std::to_string(dmg);
+  std::string hp = std::to_string(e.getHP());
+  act = " PC deals " + sdmg + " to O (" + hp + " HP)." ;
 }
 
 void Vampire::attack( Merchant &e )
 {
-  std::cout << "Vampire Attacks Merchant" << std::endl;
+  act = "";
   int dmg = damage( e );
   e.mutHP( -dmg );
   mutHP( 5 );
+  std::string sdmg = std::to_string(dmg);
+  std::string hp = std::to_string(e.getHP());
+  act = " PC deals " + sdmg + " to M (" + hp + " HP)." ;
 }
 
 void Vampire::attack( Dragon &e )
 {
-  std::cout << "Vampire Attacks Dragon" << std::endl;
+  act = "";
   int dmg = damage( e );
   e.mutHP( -dmg );
   mutHP( 5 );
+  std::string sdmg = std::to_string(dmg);
+  std::string hp = std::to_string(e.getHP());
+  act = " PC deals " + sdmg + " to D (" + hp + " HP)." ;
 }
 
 void Vampire::attack( Halfling &e )
 {
-  std::cout << "Vampire Attacks Halfling" << std::endl;
+  act = "";
   if ( fiftyFifty() )
   {
     int dmg = damage( e );
-    std::cout << dmg << std::endl;
     e.mutHP( -dmg );
-    std::cout << e.getHP() << std::endl;
     mutHP( 5 );
+    std::string sdmg = std::to_string(dmg);
+    std::string hp = std::to_string(e.getHP());
+    act = " PC deals " + sdmg + " to L (" + hp + " HP)." ;
   }
-  else std::cout << "missed" << std::endl;
+  else 
+  {
+    std::string hp = std::to_string(e.getHP());
+    act = " PC attack missed! L (" + hp + " HP)." ;
+  }
 }
 
 void Vampire::attackedBy( Enemy &e ) { e.attack( * this ); }

@@ -5,71 +5,95 @@ Dwarf::~Dwarf() {}
 
 void Dwarf::attack( Shade &p )
 {
-  std::cout << "Dwarf Attacks Shade" << std::endl;
   if ( fiftyFifty() )
   {
     int dmg = damage( p );
-    std::cout << dmg << std::endl;
     p.mutHP( -dmg );
-    std::cout << p.getHP() << std::endl;
+    act = "";
+    std::string sdmg = std::to_string(dmg);
+    act = " W deals " + sdmg + " to PC." ;
   }
-  else std::cout << "missed" << std::endl;
+  else
+  {
+    act = "";
+    act = " W Attack missed! PC.";
+  }
 }
 
 
 void Dwarf::attack( Drow &p )
 {
-  std::cout << "Dwarf Attacks Drow" << std::endl;
   if ( fiftyFifty() )
   {
     int dmg = damage( p );
-    std::cout << dmg << std::endl;
     p.mutHP( -dmg );
-    std::cout << p.getHP() << std::endl;
+    act = "";
+    std::string sdmg = std::to_string(dmg);
+    act = " W deals " + sdmg + " to PC." ;
   }
-  else std::cout << "missed" << std::endl;
+  else
+  {
+    act = "";
+    act = " W Attack missed! PC.";
+  }
 }
 
 
 void Dwarf::attack( Vampire &p )
 {
-  std::cout << "Dwarf Attacks Vampire" << std::endl;
   if ( fiftyFifty() )
   {
     int dmg = damage( p );
-    std::cout << dmg << std::endl;
     p.mutHP( -dmg );
-    std::cout << p.getHP() << std::endl;
+    act = "";
+    std::string sdmg = std::to_string(dmg);
+    act = " W deals " + sdmg + " to PC." ;
   }
-  else std::cout << "missed" << std::endl;
+  else
+  {
+    act = "";
+    act = " W Attack missed! PC.";
+  }
 }
 
 void Dwarf::attack( Troll &p )
 {
-  std::cout << "Dwarf Attacks Troll" << std::endl;
   if ( fiftyFifty() )
   {
     int dmg = damage( p );
-    std::cout << dmg << std::endl;
     p.mutHP( -dmg );
-    std::cout << p.getHP() << std::endl;
+    act = "";
+    std::string sdmg = std::to_string(dmg);
+    act = " W deals " + sdmg + " to PC." ;
   }
-  else std::cout << "missed" << std::endl;
+  else
+  {
+    act = "";
+    act = " W Attack missed! PC.";
+  }
 }
 
 
 void Dwarf::attack( Goblin &p )
 {
-  std::cout << "Dwarf Attacks Drow" << std::endl;
   if ( fiftyFifty() )
   {
     int dmg = damage( p );
-    std::cout << dmg << std::endl;
     p.mutHP( -dmg );
-    std::cout << p.getHP() << std::endl;
+    act = "";
+    std::string sdmg = std::to_string(dmg);
+    act = " W deals " + sdmg + " to PC." ;
   }
-  else std::cout << "missed" << std::endl;
+  else
+  {
+    act = "";
+    act = " W Attack missed! PC.";
+  }
 }
 
 
-void Dwarf::attackedBy( Player &p ) { p.attack( *this ); }
+void Dwarf::attackedBy( Player &p )
+{
+  p.attack( *this );
+  p.attackedBy( *this );
+} 

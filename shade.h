@@ -23,7 +23,7 @@ class Shade : public Player
   void attack( Dragon &e );
   void attack( Halfling &e );  
   void attackedBy( Enemy &e );
+  int getScore() override; 
 };
 
 #endif
-

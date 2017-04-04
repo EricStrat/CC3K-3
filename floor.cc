@@ -4,9 +4,11 @@
 #include "shade.h"
 #include "ctime"
 #include <stdexcept>
-Floor::Floor( int level, std::string cmd ) 
-: level{level}, len{len}, wid{wid}
+#include "result.h"
+Floor::Floor( int level, std::ifstream& file, bool readMap, std::string cmd ) 
+: action{" Player character has spawned."}, level{level}, len{len}, wid{wid}, readMap{readMap},file(file)
 {
+//  this->file = file;
   if ( cmd == "s" || cmd == "S" ) mainChar = new Shade;
   else if ( cmd == "d" || cmd == "D" ) mainChar = new Drow;
   else if ( cmd == "v" || cmd == "V" ) mainChar = new Vampire;
@@ -18,6 +20,8 @@ Player* Floor::getMainChar(){ return mainChar; }
 
 void Floor::clearFloor() 
 { 
+  if ( readMap ) file.clear();
+  if ( readMap ) file.seekg(0, file.beg);
   theFloor.clear(); 
   theChambers.clear();// leak mem??
   theEnemies.clear(); // leak mem??
@@ -26,8 +30,10 @@ void Floor::clearFloor()
 Floor::~Floor() { clearFloor(); }
 
 
-void Floor::init() 
-{ 
+void Floor::init( std::ifstream& file ) 
+{
+	mainChar->setDef( mainChar->getBaseDef() ) ;
+	mainChar->setAtk( mainChar->getBaseAtk() ) ;
 	if ( theFloor.size() ) clearFloor();
 
 	// make vectors
@@ -73,7 +79,7 @@ void Floor::init()
 		}
 	}
 
-	std::ifstream file("stage.txt");
+//	std::ifstream file("stage.txt");
 	int row = 0;
 	int col = 0;
 	char cha;
@@ -151,6 +157,7 @@ void Floor::init()
 			Dragon* dra = new Dragon;
 			theChambers.at( cham )->theChamber.at( pos )->setTreasure( "dragon" );
 			int dpos;
+			srand( time(NULL) );
 			while(true)
 			{
 				int r = theChambers.at( cham )->theChamber.at( pos )->getRow();
@@ -211,8 +218,24 @@ void Floor::moveEnemies()
   std::string randPos[8] = {"no", "ea", "we", "so", "nw", "ne", "se", "sw"};
   for ( int i = 0; i < len; ++i )
   {
-    int rng = rand() % 8;
-    move( theEnemies[i], randPos[rng]);
+    bool mov = true;
+    int er = theEnemies[i]->getRow();
+    int ec = theEnemies[i]->getCol();
+    int pr = mainChar->getRow();
+    int pc = mainChar->getCol();
+    if ( er == pr && ec == pc - 1  ) mov = false;
+    else if ( er == pr && ec == pc + 1  ) mov = false;
+    else if ( er == pr + 1 && ec == pc - 1 ) mov = false;
+    else if ( er == pr + 1 && ec == pc + 1 ) mov = false;
+    else if ( er == pr + 1 && ec == pc ) mov = false;
+    else if ( er == pr - 1 && ec == pc - 1 ) mov = false;
+    else if ( er == pr - 1 && ec == pc + 1 ) mov = false;
+    else if ( er == pr - 1 && ec == pc ) mov = false;
+    if ( mov )
+    {
+      int rng = rand() % 8;
+      move( theEnemies[i], randPos[rng]);
+    }
   }
 }
 
@@ -224,6 +247,7 @@ void Floor::move( Character* cp1, std::string direction )
   {
     if (cp1->getType() == "player"? theFloor[startRow-1][startCol]->getPmov() : theFloor[startRow-1][startCol]->getEmov()) 
     { 
+      if (cp1->getType() == "player")  action = action +  " PC moves North";
       theFloor[startRow-1][startCol]->set( theFloor[startRow][startCol]->getCp() );
       cp1->mutRow(startRow-1);
       theFloor[startRow][startCol]->unSet();
@@ -234,6 +258,7 @@ void Floor::move( Character* cp1, std::string direction )
   {
     if (cp1->getType() == "player"?  theFloor[startRow-1][startCol-1]->getPmov() :  theFloor[startRow-1][startCol-1]->getEmov()) 
     {  
+       if (cp1->getType() == "player") action = action +  " PC moves NorthWest";
        theFloor[startRow-1][startCol-1]->set( theFloor[startRow][startCol]->getCp() );
        cp1->mutRow(startRow-1);
        cp1->mutCol(startCol-1);
@@ -245,6 +270,7 @@ void Floor::move( Character* cp1, std::string direction )
   {
     if (cp1->getType() == "player"? theFloor[startRow-1][startCol+1]->getPmov() :  theFloor[startRow-1][startCol+1]->getEmov()) 
     {  
+      if (cp1->getType() == "player") action = action + " PC moves NorthEast";
       theFloor[startRow-1][startCol+1]->set( theFloor[startRow][startCol]->getCp() );
       cp1->mutRow(startRow-1);
       cp1->mutCol(startCol+1);
@@ -255,7 +281,8 @@ void Floor::move( Character* cp1, std::string direction )
   else if (direction == "so")
   {
     if (cp1->getType() == "player"?  theFloor[startRow+1][startCol]->getPmov() :  theFloor[startRow+1][startCol]->getEmov()) 
-    {  
+    { 
+      if (cp1->getType() == "player") action = action + " PC moves South";
       theFloor[startRow+1][startCol]->set( theFloor[startRow][startCol]->getCp() );
       cp1->mutRow(startRow+1);
       theFloor[startRow][startCol]->unSet();
@@ -266,6 +293,7 @@ void Floor::move( Character* cp1, std::string direction )
   {
     if (cp1->getType() == "player"?  theFloor[startRow+1][startCol+1]->getPmov() :  theFloor[startRow+1][startCol+1]->getEmov()) 
     {  
+      if (cp1->getType() == "player") action =  action + " PC moves SouthEast";
       theFloor[startRow+1][startCol+1]->set( theFloor[startRow][startCol]->getCp() );
       cp1->mutRow(startRow+1);
       cp1->mutCol(startCol+1);
@@ -277,6 +305,7 @@ void Floor::move( Character* cp1, std::string direction )
   {
     if (cp1->getType() == "player"?  theFloor[startRow+1][startCol-1]->getPmov() :  theFloor[startRow+1][startCol-1]->getEmov())
     {  
+      if (cp1->getType() == "player") action = action + " PC moves SouthWest";
       theFloor[startRow+1][startCol-1]->set( theFloor[startRow][startCol]->getCp() );
       cp1->mutRow(startRow+1);
       cp1->mutCol(startCol-1);
@@ -288,6 +317,7 @@ void Floor::move( Character* cp1, std::string direction )
   {
     if (cp1->getType() == "player" ?  theFloor[startRow][startCol+1]->getPmov() :  theFloor[startRow][startCol+1]->getEmov()) 
     {  
+      if (cp1->getType() == "player") action =  action +" PC moves East";
       theFloor[startRow][startCol+1]->set( theFloor[startRow][startCol]->getCp() );
       cp1->mutCol(startCol+1);
       theFloor[startRow][startCol]->unSet();
@@ -298,12 +328,14 @@ void Floor::move( Character* cp1, std::string direction )
   {
     if (cp1->getType() == "player" ?  theFloor[startRow][startCol-1]->getPmov() :  theFloor[startRow][startCol-1]->getEmov()) 
     {  
+      if (cp1->getType() == "player") action = action +  " PC moves West";
       theFloor[startRow][startCol-1]->set( theFloor[startRow][startCol]->getCp() );
       cp1->mutCol(startCol-1);
       theFloor[startRow][startCol]->unSet();
       theFloor[startRow][startCol-1]->notifyNbors();
     }
   }
+  
   if( isAtStairs() ) std::cout << isWon() << std::endl;
   if ( isAtPotion() ) 
   {
@@ -314,6 +346,11 @@ void Floor::move( Character* cp1, std::string direction )
   {
     consumeTreasure( theFloor[ mainChar->getRow() ][ mainChar->getCol() ]->getTreasure() ); 
     theFloor[cp1->getRow()][cp1->getCol()]->removeTreasure(); 
+  }
+  if (cp1->getType() == "player") 
+  {
+    action = action + cp1->getAct();
+    cp1->clearAct();
   }
 }
 
@@ -326,11 +363,8 @@ void Floor::attack( std::string direction )
     if ( theFloor[mainChar->getRow()-1][mainChar->getCol()]->getCp() && theFloor[mainChar->getRow()-1][mainChar->getCol()]->getCp()->getType() == "enemy" )
     {
       static_cast<Enemy*>(theFloor[mainChar->getRow()-1][mainChar->getCol()]->getCp())->attackedBy( *static_cast<Player*>(mainChar) );
-//      double a = mainChar->getAtk();
-//      double b = theFloor[mainChar->getRow()-1][mainChar->getCol()]->getCp()->getDef();
-//      int dmg = ceil( ( 100 / ( 100 + b )  ) * a );
-//      if ( currHP ==  mainChar-)	
-      if( theFloor[mainChar->getRow()-1][mainChar->getCol()]->getCp()->getDead() ) slainEnemy(  static_cast<Enemy*>(theFloor[mainChar->getRow()-1][mainChar->getCol()]->getCp() ));
+      action = mainChar->getAct() + theFloor[mainChar->getRow()-1][mainChar->getCol()]->getCp()->getAct();
+      if( theFloor[mainChar->getRow()-1][mainChar->getCol()]->getCp()->getDead() ) slainEnemy(  static_cast<Enemy*>(theFloor[mainChar->getRow()-1][mainChar->getCol()]->getCp() ) );
     }
   }
   else if ( direction == "so" )
@@ -338,6 +372,7 @@ void Floor::attack( std::string direction )
     if ( theFloor[mainChar->getRow()+1][mainChar->getCol()]->getCp() && theFloor[mainChar->getRow()+1][mainChar->getCol()]->getCp()->getType() == "enemy" )
     {
       static_cast<Enemy*>(theFloor[mainChar->getRow()+1][mainChar->getCol()]->getCp())->attackedBy( *static_cast<Player*>(mainChar) );
+      action = mainChar->getAct() + theFloor[mainChar->getRow()+1][mainChar->getCol()]->getCp()->getAct();
       if( theFloor[mainChar->getRow()+1][mainChar->getCol()]->getCp()->getDead() ) slainEnemy(  static_cast<Enemy*>(theFloor[mainChar->getRow()+1][mainChar->getCol()]->getCp() ));
     }
   }
@@ -346,6 +381,7 @@ void Floor::attack( std::string direction )
     if ( theFloor[mainChar->getRow()][mainChar->getCol()+1]->getCp() && theFloor[mainChar->getRow()][mainChar->getCol()+1]->getCp()->getType() == "enemy" )
     {
       static_cast<Enemy*>(theFloor[mainChar->getRow()][mainChar->getCol()+1]->getCp())->attackedBy( *static_cast<Player*>(mainChar) );
+      action = mainChar->getAct() + theFloor[mainChar->getRow()][mainChar->getCol()+1]->getCp()->getAct();
       if( theFloor[mainChar->getRow()][mainChar->getCol()+1]->getCp()->getDead() ) slainEnemy( static_cast<Enemy*>( theFloor[mainChar->getRow()][mainChar->getCol()+1]->getCp()) );
     }
   }
@@ -354,6 +390,7 @@ void Floor::attack( std::string direction )
     if ( theFloor[mainChar->getRow()][mainChar->getCol()-1]->getCp() && theFloor[mainChar->getRow()][mainChar->getCol()-1]->getCp()->getType() == "enemy" )
     {
       static_cast<Enemy*>(theFloor[mainChar->getRow()][mainChar->getCol()-1]->getCp())->attackedBy( *static_cast<Player*>(mainChar) );
+      action = mainChar->getAct() + theFloor[mainChar->getRow()][mainChar->getCol()-1]->getCp()->getAct();
       if( theFloor[mainChar->getRow()][mainChar->getCol()-1]->getCp()->getDead() ) slainEnemy(  static_cast<Enemy*>(theFloor[mainChar->getRow()][mainChar->getCol()-1]->getCp() ));
     }
   }
@@ -362,6 +399,7 @@ void Floor::attack( std::string direction )
     if ( theFloor[mainChar->getRow()-1][mainChar->getCol()-1]->getCp() && theFloor[mainChar->getRow()-1][mainChar->getCol()-1]->getCp()->getType() == "enemy" )
     {
       static_cast<Enemy*>(theFloor[mainChar->getRow()-1][mainChar->getCol()-1]->getCp())->attackedBy( *static_cast<Player*>(mainChar) );
+      action = mainChar->getAct() + theFloor[mainChar->getRow()-1][mainChar->getCol()-1]->getCp()->getAct();
       if( theFloor[mainChar->getRow()-1][mainChar->getCol()-1]->getCp()->getDead() ) slainEnemy( static_cast<Enemy*>( theFloor[mainChar->getRow()-1][mainChar->getCol()-1]->getCp() ));
     }
   }
@@ -370,6 +408,7 @@ void Floor::attack( std::string direction )
     if ( theFloor[mainChar->getRow()-1][mainChar->getCol()+1]->getCp() && theFloor[mainChar->getRow()-1][mainChar->getCol()+1]->getCp()->getType() == "enemy" )
     {
       static_cast<Enemy*>(theFloor[mainChar->getRow()-1][mainChar->getCol()+1]->getCp())->attackedBy( *static_cast<Player*>(mainChar) );
+      action = mainChar->getAct() + theFloor[mainChar->getRow()-1][mainChar->getCol()+1]->getCp()->getAct();
       if( theFloor[mainChar->getRow()-1][mainChar->getCol()+1]->getCp()->getDead() ) slainEnemy(  static_cast<Enemy*>(theFloor[mainChar->getRow()-1][mainChar->getCol()+1]->getCp() ));
     }
   }
@@ -378,6 +417,7 @@ void Floor::attack( std::string direction )
     if ( theFloor[mainChar->getRow()+1][mainChar->getCol()+1]->getCp() && theFloor[mainChar->getRow()+1][mainChar->getCol()+1]->getCp()->getType() == "enemy" )
     {
       static_cast<Enemy*>(theFloor[mainChar->getRow()+1][mainChar->getCol()+1]->getCp())->attackedBy( *static_cast<Player*>(mainChar) );
+      action = mainChar->getAct() + theFloor[mainChar->getRow()+1][mainChar->getCol()+1]->getCp()->getAct();
       if( theFloor[mainChar->getRow()+1][mainChar->getCol()+1]->getCp()->getDead() ) slainEnemy( static_cast<Enemy*>( theFloor[mainChar->getRow()+1][mainChar->getCol()+1]->getCp() ));
     }
   }
@@ -386,6 +426,7 @@ void Floor::attack( std::string direction )
     if ( theFloor[mainChar->getRow()+1][mainChar->getCol()-1]->getCp() && theFloor[mainChar->getRow()+1][mainChar->getCol()-1]->getCp()->getType() == "enemy" )
     {
       static_cast<Enemy*>(theFloor[mainChar->getRow()+1][mainChar->getCol()-1]->getCp())->attackedBy( *static_cast<Player*>(mainChar) );
+      action = mainChar->getAct() + theFloor[mainChar->getRow()+1][mainChar->getCol()-1]->getCp()->getAct();
       if( theFloor[mainChar->getRow()+1][mainChar->getCol()-1]->getCp()->getDead() ) slainEnemy(  static_cast<Enemy*>(theFloor[mainChar->getRow()+1][mainChar->getCol()-1]->getCp() ));
     }
   }
@@ -399,16 +440,31 @@ bool Floor::isAtTreasure() { return theFloor[mainChar->getRow()][mainChar->getCo
 void Floor::consumeTreasure( std::string s )
 {
   Player * temp2;
-  if ( s == "small" ) temp2 = new Small{mainChar};
-  else if ( s == "normal" ) temp2 = new Normal{mainChar};
-  else if ( s == "dragon" ) temp2 = new DragonHoard{mainChar};
-  else if ( s == "merchant" ) temp2 = new MerchantHoard{mainChar};
+  if ( s == "small" ) 
+  {
+    temp2 = new Small{mainChar};
+    action = action + " and picks up ST";
+  }
+  else if ( s == "normal" ) 
+  {
+    temp2 = new Normal{mainChar};
+    action = action + " and picks up NT";
+  }
+  else if ( s == "dragon" )
+  {  
+    temp2 = new DragonHoard{mainChar};
+    action = action + " and picks up DH";
+  }
+  else if ( s == "merchant" ) 
+  {
+    temp2 = new MerchantHoard{mainChar};
+    action = action + " and picks up MH";
+  }
   mainChar->setGold( temp2->getGold() );
   delete temp2;
 }
 
 
-void Floor::gameOver() {};
 
 void Floor::consumePotion()
 { 
@@ -416,15 +472,38 @@ void Floor::consumePotion()
   int rng = rand() % 6; 
   //make temp copy of main char on heap
   Player * temp2;
-  if ( rng == 0 )  temp2= new BoostAtk{mainChar};
-  else if ( rng == 1 ) temp2 = new BoostDef{mainChar};
-  else if ( rng == 2 ) temp2 = new WoundAtk{mainChar};
-  else if ( rng == 3 ) temp2 = new WoundDef{mainChar};
-  else if ( rng == 4 ) temp2  = new RestoreHealth{mainChar};
-  else temp2 = new PoisonHealth{mainChar};
+  if ( rng == 0 )  
+  {
+    temp2= new BoostAtk{mainChar};
+    action = action + " uses BA";
+  }
+  else if ( rng == 1 ) 
+  {
+    temp2 = new BoostDef{mainChar};
+    action = action + " uses BD";
+  }
+  else if ( rng == 2 ) 
+  {
+    temp2 = new WoundAtk{mainChar};
+    action = action + " uses WA";
+  }
+  else if ( rng == 3 ) 
+  {
+  temp2 = new WoundDef{mainChar};
+  action = action + " uses WD";
+  }
+  else if ( rng == 4 ) 
+  {
+    temp2  = new RestoreHealth{mainChar};
+    action = action + " uses RH";
+  }
+  else 
+  {
+    temp2 = new PoisonHealth{mainChar};
+    action = action + " uses PH";
+  }
   if ( temp2->getHP() <= 0 )
   {
-    gameOver();
     return;
   }
 
@@ -438,40 +517,61 @@ void Floor::consumePotion()
 std::string Floor::isWon()
 {
 	if ( level == 5 ){ 
-            // throw std::logic_error;
+             throw result{"Win"};
              return "WIN!";
 }
 	else 
 	{ 
 		++level;
-		init();
+		file.clear();
+		file.seekg(0, file.beg);
+		init( file );
 		return "New Floor!";
 	}
 }
 
 void Floor::slainEnemy( Enemy* e )
 {
-  if ( mainChar->getRace() == "Goblin" )
+  if ( e->getRace() == "Human" )
   {
-    mainChar->mutGold(5);
-    theFloor[e->getRow()][e->getCol()]->unSet();
+    if ( mainChar-> getRace() == "Goblin" && !mainChar->getDead() ) mainChar->mutGold(5);
+    else 
+    {
+      theFloor[e->getRow()][e->getCol()]->unSet();
+      theFloor[e->getRow()][e->getCol()]->setTreasure( "merchant" );  
+    }
   }
-  if ( e->getRace() == "Merchant" )
+  else if ( e->getRace() == "Merchant" )
   {
-    theFloor[e->getRow()][e->getCol()]->unSet();
-    theFloor[e->getRow()][e->getCol()]->setTreasure( "merchant" );  
+    if (mainChar-> getRace() == "Goblin" && !mainChar->getDead() ) mainChar->mutGold(5);
+    else
+    {
+      theFloor[e->getRow()][e->getCol()]->unSet();
+      theFloor[e->getRow()][e->getCol()]->setTreasure( "merchant" );  
+    }
   }
   else if ( e->getRace() == "Dragon" )
   {
+    if (mainChar-> getRace() == "Goblin" && !mainChar->getDead() ) mainChar->mutGold(5);
+    else
+    {
+    theFloor[e->getRow()][e->getCol()]->unSetDh();
     theFloor[e->getRow()][e->getCol()]->unSet();
+    }
   }
   else 
   {
-    srand( time(NULL));
-    mainChar->mutGold( rand() % 1 + 1 );
-    theFloor[e->getRow()][e->getCol()]->unSet();
+    if (mainChar-> getRace() == "Goblin" && !mainChar->getDead() ) mainChar->mutGold(5);
+    else
+    {
+      srand( time(NULL));
+      mainChar->mutGold( rand() % 1 + 1 );
+      theFloor[e->getRow()][e->getCol()]->unSet();
+    }
   }
 }
+
+void Floor::clearAction() { action = ""; }
 
 std::ostream &operator<<(std::ostream &out, const Floor &f) 
 {
@@ -488,7 +588,7 @@ std::ostream &operator<<(std::ostream &out, const Floor &f)
   out << "HP: " << f.mainChar->getHP() << std::endl;
   out << "Atk: " << f.mainChar->getAtk() << std::endl;
   out << "Def: " << f.mainChar->getDef() << std::endl;
-  out << "Action:" << std::endl; 
+  out << "Action:" << f.action << std::endl; 
   return out;
-}
+	}
 

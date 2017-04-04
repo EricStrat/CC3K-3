@@ -1,73 +1,88 @@
 #include "troll.h"
 
-Troll::Troll() : Player( 120, 120, 25, 25, 21, 15, 0, "Troll" ) {}
+Troll::Troll() : Player( 120, 120, 25, 25, 15, 15, 0, "Troll" ) {}
 Troll::~Troll() {}
 
 void Troll::attack( Human &e )
 {
-  std::cout << "Troll Attacks Human" << std::endl;
+  act = "";
   int dmg = damage( e );
-  std::cout << dmg << std::endl;
   e.mutHP( -dmg );
-  std::cout << e.getHP() << std::endl;
+  std::string sdmg = std::to_string(dmg);
+  std::string hp = std::to_string(e.getHP());
+  act = " PC deals " + sdmg + " to H (" + hp + " HP)." ;
+
 }
 
 void Troll::attack( Dwarf &e )
 {
-  std::cout << "troll Attacks Dwarf" << std::endl;
+  act = "";
   int dmg = damage( e );
-  std::cout << dmg << std::endl;
   e.mutHP( -dmg );
-  std::cout << e.getHP() << std::endl;
+  std::string sdmg = std::to_string(dmg);
+  std::string hp = std::to_string(e.getHP());
+  act = " PC deals " + sdmg + " to W (" + hp + " HP)." ;
+
 }
 
 void Troll::attack( Elf &e )
 {
-  std::cout << "Troll Attacks Elf" << std::endl;
+  act = "";
   int dmg = damage( e );
-  std::cout << dmg << std::endl;
   e.mutHP( -dmg );
-  std::cout << e.getHP() << std::endl;
+  std::string sdmg = std::to_string(dmg);
+  std::string hp = std::to_string(e.getHP());
+  act = " PC deals " + sdmg + " to E (" + hp + " HP)." ;
+
 }
 
 void Troll::attack( Orc  &e )
 {
-  std::cout << "Troll Attacks Orc" << std::endl;
+  act = "";
   int dmg = damage( e );
-  std::cout << dmg << std::endl;
   e.mutHP( -dmg );
-  std::cout << e.getHP() << std::endl;
+  std::string sdmg = std::to_string(dmg);
+  std::string hp = std::to_string(e.getHP());
+  act = " PC deals " + sdmg + " to O (" + hp + " HP)." ;
+
 }
 
 void Troll::attack( Merchant &e )
-{
-  std::cout << "Troll Attacks Merchant" << std::endl;
+{ 
+  act = "";
   int dmg = damage( e );
-  std::cout << dmg << std::endl;
   e.mutHP( -dmg );
-  std::cout << e.getHP() << std::endl;
+  std::string sdmg = std::to_string(dmg);
+  std::string hp = std::to_string(e.getHP());
+  act = " PC deals " + sdmg + " to M (" + hp + " HP)." ;
 }
 
 void Troll::attack( Dragon &e )
 {
-  std::cout << "Troll Attacks Dragon" << std::endl;
+  act = "";
   int dmg = damage( e );
-  std::cout << dmg << std::endl;
   e.mutHP( -dmg );
-  std::cout << e.getHP() << std::endl;
+  std::string sdmg = std::to_string(dmg);
+  std::string hp = std::to_string(e.getHP());
+  act = " PC deals " + sdmg + " to D (" + hp + " HP)." ;
 }
 
 void Troll::attack( Halfling &e )
 {
-  std::cout << "Troll Attacks Halfling" << std::endl;
+  act = "";
   if ( fiftyFifty() )
   {
     int dmg = damage( e );
-    std::cout << dmg << std::endl;
     e.mutHP( -dmg );
-    std::cout << e.getHP() << std::endl;
+    std::string sdmg = std::to_string(dmg);
+    std::string hp = std::to_string(e.getHP());
+    act = " PC deals " + sdmg + " to L (" + hp + " HP)." ;
   }
-  else std::cout << "missed" << std::endl;
+  else 
+  {
+    std::string hp = std::to_string(e.getHP());
+    act = " PC attack missed! L (" + hp + " HP)." ;
+  }
 }
 
 void Troll::attackedBy( Enemy &e ) { e.attack( * this ); }

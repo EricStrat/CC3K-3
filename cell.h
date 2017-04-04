@@ -10,6 +10,9 @@
 #include "enemy.h"
 #include "subscriptions.h"
 #include <string>
+#include <sstream>
+#include <cstdlib>
+#include "merchant.h"
 
 class Cell 
 {
@@ -35,8 +38,10 @@ class Cell
   void removePotion();
   void removeTreasure();
   void unSet();
+  void unSetDh();
   char getSymbol() const;
   std::string getname() const;
+  std::vector<Cell*>* getNbors();
   Character* getCp() const;
   int getRow() const;
   int getCol() const;
@@ -45,6 +50,7 @@ class Cell
   bool getStair() const;
   bool getPot() const;
   bool getTre() const;
+  bool getDh() const;
   std::string getTreasure() const;
   void link( Cell* nbor );
   void notify( Cell &whoNoitified );
