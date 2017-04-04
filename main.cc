@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <cstdlib>
 #include "result.h"
+
 bool reborn = true;
 bool move = true;
 bool readMap = false;
@@ -47,8 +48,6 @@ int main(int argc, const char *argv[] )
 		std::cout << "(S)hade, (D)row, (V)ampire, (T)roll, (G)oblin" << std::endl;
 		std::string cmd;
 		Floor *floor;
-		int level = 1;
-		int turn = 0;  
 		//choose character
 		while(std::cin >> cmd )
 		{
@@ -56,7 +55,7 @@ int main(int argc, const char *argv[] )
 
 			else if (cmd == "s" || cmd == "S" || cmd == "D" || cmd == "d" || cmd == "V" || cmd == "v" || cmd == "T" || cmd == "t" || cmd == "G" || cmd == "g") 
 			{ 
-				floor = new Floor( 1, file, readMap, cmd );
+				floor = new Floor( readMap, 1, file, cmd );
 				break;
 			}
 			else {

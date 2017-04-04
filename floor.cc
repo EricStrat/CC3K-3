@@ -5,10 +5,10 @@
 #include "ctime"
 #include <stdexcept>
 #include "result.h"
-Floor::Floor( int level, std::ifstream& file, bool readMap, std::string cmd ) 
-: action{" Player character has spawned."}, level{level}, len{len}, wid{wid}, readMap{readMap},file(file)
+
+Floor::Floor( bool readMap, int level, std::ifstream& file, std::string cmd ) 
+: action{" Player character has spawned."}, readMap{readMap}, level{level}, len{len}, wid{wid}, file(file)
 {
-//  this->file = file;
   if ( cmd == "s" || cmd == "S" ) mainChar = new Shade;
   else if ( cmd == "d" || cmd == "D" ) mainChar = new Drow;
   else if ( cmd == "v" || cmd == "V" ) mainChar = new Vampire;
@@ -23,8 +23,9 @@ void Floor::clearFloor()
   if ( readMap ) file.clear();
   if ( readMap ) file.seekg(0, file.beg);
   theFloor.clear(); 
-  theChambers.clear();// leak mem??
-  theEnemies.clear(); // leak mem??
+  theChambers.clear();
+  theEnemies.clear();
+  theDragons.clear();
 }
 
 Floor::~Floor() { clearFloor(); }
@@ -36,177 +37,254 @@ void Floor::init( std::ifstream& file )
 	mainChar->setAtk( mainChar->getBaseAtk() ) ;
 	if ( theFloor.size() ) clearFloor();
 
-	// make vectors
-
-	for ( int i = 0; i < 5; ++i )
+	// make vectorsi
+	if ( !readMap )
 	{
-		Chamber* ch = new Chamber;
-		theChambers.emplace_back( ch );
-	}    
-	srand( time(NULL) );
-	for ( int i = 0; i < 20; ++i ) 
-	{
-		int rng = rand() % 18; 
-		if ( rng < 4 ) 
+		for ( int i = 0; i < 5; ++i )
 		{
-			Human* ene = new Human;
-			theEnemies.emplace_back( ene );
-		}
-		else if ( rng < 7 )
+			Chamber* ch = new Chamber;
+			theChambers.emplace_back( ch );
+		}    
+		srand( time(NULL) );
+		for ( int i = 0; i < 20; ++i ) 
 		{
-			Dwarf* ene = new Dwarf;
-			theEnemies.emplace_back( ene );
-		}
-		else if ( rng < 12 ) 
-		{
-			Halfling* ene = new Halfling;
-			theEnemies.emplace_back( ene );
-		}
-		else if ( rng < 14 )
-		{
-			Elf* ene = new Elf;
-			theEnemies.emplace_back( ene );
-		}
-		else if ( rng < 16 )
-		{
-			Orc* ene = new Orc;
-			theEnemies.emplace_back( ene );
-		}
-		else 
-		{
-			Merchant* ene = new Merchant;
-			theEnemies.emplace_back( ene );
-		}
-	}
-
-//	std::ifstream file("stage.txt");
-	int row = 0;
-	int col = 0;
-	char cha;
-	while ( file.get(cha) ) 
-	{
-		if (col == 0 ) 
-		{
-			theFloor.emplace_back();
-		}
-		if ( col >= 0 && col < 80 )
-		{
-			Cell *cell = new Cell( cha, row, col ); // leak mem?
-			theFloor[row].emplace_back( cell );
-			if ( cha == 'A' ) theChambers.at( 0 )->theChamber.emplace_back( cell );
-			else if ( cha == 'B' ) theChambers.at( 1 )->theChamber.emplace_back( cell ); 
-			else if ( cha == 'C' ) theChambers.at( 2 )->theChamber.emplace_back( cell );
-			else if ( cha == 'D' ) theChambers.at( 3 )->theChamber.emplace_back( cell );
-			else if ( cha == 'E' ) theChambers.at( 4 )->theChamber.emplace_back( cell ); 
-			if ( row != 0 && col != 0 ) 
+			int rng = rand() % 18; 
+			if ( rng < 4 ) 
 			{
-				cell->link( theFloor[row-1][col] ); // link to the left
-				cell->link( theFloor[row-1][col-1] ); // link up left
-				cell->link( theFloor[row][col-1] ); // link up
+				Human* ene = new Human;
+				theEnemies.emplace_back( ene );
 			}
-			else if ( row != 0 ) cell->link( theFloor[row-1][col] ); 
-			else if ( col != 0 ) cell->link( theFloor[row][col-1] );
-			if ( row != 0 && col != 79 ) cell->link( theFloor[row-1][col+1] );
-			++col;
-		}
-		if ( col == 80 )
-		{
-			col = 0;
-			++row;
-		}
-	}
-	srand( time(NULL) );
-	int charChamb = rand() % 5;
-	theChambers.at( charChamb )->placeChar( mainChar );
-	for ( int i = 0; i < 20; ++i )
-	{
-		int z = rand() % 5;
-		theChambers.at( z )->placeChar( theEnemies.at( i ) );
-	}
-	// place stair not in chamber q
-	while ( true )
-	{
-		int cham = rand() % 5;
-		if ( cham != charChamb ) 
-		{
-			int pos = rand() % (theChambers.at( cham )->theChamber.size());
-			theChambers.at( cham )->theChamber.at( pos )->setStair();
-			break;
-		}
-	}
-	// place potions;
-	srand( time(NULL) );
-	for ( int i = 0; i < 10; ++i )
-	{
-		int cham = rand() % 5;
-		int pos = rand() % ( theChambers.at( cham )->theChamber.size() );
-		theChambers.at( cham )->theChamber.at( pos )->setPotion();
-		theChambers.at( cham )->remove( pos); 
-	}
-	srand( time(NULL) );
-	//place treasures
-	for ( int i = 0; i < 10; ++i )
-	{
-		int cham = rand() % 5;
-		int pos = rand() % ( theChambers.at( cham )->theChamber.size() );
-		int tr = rand() % 8;
-		if ( tr < 2 ) theChambers.at( cham )->theChamber.at( pos )->setTreasure( "small" );
-		else if ( tr < 7 ) theChambers.at( cham )->theChamber.at( pos )->setTreasure( "normal" );
-		else 
-		{ 
-			Dragon* dra = new Dragon;
-			theChambers.at( cham )->theChamber.at( pos )->setTreasure( "dragon" );
-			int dpos;
-			srand( time(NULL) );
-			while(true)
+			else if ( rng < 7 )
 			{
-				int r = theChambers.at( cham )->theChamber.at( pos )->getRow();
-				int c = theChambers.at( cham )->theChamber.at( pos )->getCol();
-				dpos = rand() % 8;
-				if ( dpos == 0 && theFloor[r-1][c-1]->getEmov() ) 
-				{ 
-					theFloor[r-1][c-1]->set( dra );
-					break;
-				}
-				else if ( dpos == 1 && theFloor[r-1][c]->getEmov() ) 
-				{
-					theFloor[r-1][c]->set(dra);
-					break;
-				}
-				else if ( dpos == 2 && theFloor[r-1][c+1]->getEmov() ) 
-				{
-					theFloor[r-1][c+1]->set( dra );
-					break;
-				}
-				else if ( dpos == 3 && theFloor[r][c-1]->getEmov() ) 
-				{
-					theFloor[r][c-1]->set( dra );
-					break;
-				}
-				else if ( dpos == 4 && theFloor[r][c+1]->getEmov() ) 
-				{
-					theFloor[r][c+1]->set( dra );
-					break;
-				}
-				else if ( dpos == 5 && theFloor[r+1][c-1]->getEmov() ) 
-				{
-					theFloor[r+1][c-1]->set( dra );
-					break;
-				}
-				else if ( dpos == 6 && theFloor[r+1][c]->getEmov() ) 
-				{
-					theFloor[r+1][c]->set( dra );
-					break;
-				}
-				else if ( dpos == 7 && theFloor[r+1][c+1]->getEmov() ) 
-				{
-					theFloor[r+1][c+1]->set( dra );
-					break;
-				}
-				 
+				Dwarf* ene = new Dwarf;
+				theEnemies.emplace_back( ene );
 			}
-			theChambers.at( cham )->remove( pos ); 
+			else if ( rng < 12 ) 
+			{
+					Halfling* ene = new Halfling;
+				theEnemies.emplace_back( ene );
+			}
+			else if ( rng < 14 )
+			{
+				Elf* ene = new Elf;
+				theEnemies.emplace_back( ene );
+			}
+			else if ( rng < 16 )
+			{
+				Orc* ene = new Orc;
+				theEnemies.emplace_back( ene );
+			}
+			else 
+			{
+				Merchant* ene = new Merchant;
+				theEnemies.emplace_back( ene );
+			}
 		}
+	
+		int row = 0;
+		int col = 0;
+		char cha;
+		while ( file.get(cha) ) 
+		{
+			if (col == 0 ) 
+			{
+				theFloor.emplace_back();
+			}
+			if ( col >= 0 && col < 80 )
+			{
+				Cell *cell = new Cell( cha, row, col ); // leak mem?
+				theFloor[row].emplace_back( cell );
+				if ( cha == 'A' ) theChambers.at( 0 )->theChamber.emplace_back( cell );
+				else if ( cha == 'B' ) theChambers.at( 1 )->theChamber.emplace_back( cell ); 
+				else if ( cha == 'C' ) theChambers.at( 2 )->theChamber.emplace_back( cell );
+				else if ( cha == 'D' ) theChambers.at( 3 )->theChamber.emplace_back( cell );
+				else if ( cha == 'E' ) theChambers.at( 4 )->theChamber.emplace_back( cell ); 
+				if ( row != 0 && col != 0 ) 
+				{
+					cell->link( theFloor[row-1][col] ); // link to the left
+					cell->link( theFloor[row-1][col-1] ); // link up left
+					cell->link( theFloor[row][col-1] ); // link up
+				}
+				else if ( row != 0 ) cell->link( theFloor[row-1][col] ); 
+				else if ( col != 0 ) cell->link( theFloor[row][col-1] );
+				if ( row != 0 && col != 79 ) cell->link( theFloor[row-1][col+1] );
+				++col;
+			}
+			if ( col == 80 )
+			{
+				col = 0;
+				++row;
+			}
+		}
+		srand( time(NULL) );
+		int charChamb = rand() % 5;
+		theChambers.at( charChamb )->placeChar( mainChar );
+		for ( int i = 0; i < 20; ++i )
+		{
+			int z = rand() % 5;
+			theChambers.at( z )->placeChar( theEnemies.at( i ) );
+		}
+		// place stair not in chamber q
+		while ( true )
+		{
+			int cham = rand() % 5;
+			if ( cham != charChamb ) 
+			{
+				int pos = rand() % (theChambers.at( cham )->theChamber.size());
+				theChambers.at( cham )->theChamber.at( pos )->setStair();
+				break;
+			}
+		}
+		// place potions;
+		srand( time(NULL) );
+		for ( int i = 0; i < 10; ++i )
+		{
+			int cham = rand() % 5;
+			int pos = rand() % ( theChambers.at( cham )->theChamber.size() );
+			theChambers.at( cham )->theChamber.at( pos )->setPotion();
+			theChambers.at( cham )->remove( pos); 
+		}
+		srand( time(NULL) );
+		//place treasures
+		for ( int i = 0; i < 10; ++i )
+		{
+			int cham = rand() % 5;
+			int pos = rand() % ( theChambers.at( cham )->theChamber.size() );
+			int tr = rand() % 8;
+			if ( tr < 2 ) theChambers.at( cham )->theChamber.at( pos )->setTreasure( "small" );
+			else if ( tr < 7 ) theChambers.at( cham )->theChamber.at( pos )->setTreasure( "normal" );
+			else 
+			{ 
+				Dragon* dra = new Dragon;
+				theChambers.at( cham )->theChamber.at( pos )->setTreasure( "dragon" );
+				int dpos;
+				srand( time(NULL) );
+				while(true)
+				{
+					int r = theChambers.at( cham )->theChamber.at( pos )->getRow();
+					int c = theChambers.at( cham )->theChamber.at( pos )->getCol();
+					dpos = rand() % 8;
+					if ( dpos == 0 && theFloor[r-1][c-1]->getEmov() ) 
+					{ 
+						theFloor[r-1][c-1]->set( dra );
+						break;
+					}
+					else if ( dpos == 1 && theFloor[r-1][c]->getEmov() ) 
+					{
+						theFloor[r-1][c]->set(dra);
+						break;
+					}
+					else if ( dpos == 2 && theFloor[r-1][c+1]->getEmov() ) 
+					{
+						theFloor[r-1][c+1]->set( dra );
+						break;
+					}
+					else if ( dpos == 3 && theFloor[r][c-1]->getEmov() ) 
+					{
+						theFloor[r][c-1]->set( dra );
+						break;
+					}
+					else if ( dpos == 4 && theFloor[r][c+1]->getEmov() ) 
+					{
+						theFloor[r][c+1]->set( dra );
+						break;
+					}
+					else if ( dpos == 5 && theFloor[r+1][c-1]->getEmov() ) 
+					{
+						theFloor[r+1][c-1]->set( dra );
+						break;
+					}
+					else if ( dpos == 6 && theFloor[r+1][c]->getEmov() ) 
+					{
+						theFloor[r+1][c]->set( dra );
+						break;
+					}
+					else if ( dpos == 7 && theFloor[r+1][c+1]->getEmov() ) 
+					{
+						theFloor[r+1][c+1]->set( dra );
+						break;
+					}
+					 
+				}
+				theChambers.at( cham )->remove( pos ); 
+			}
+		}
+	}
+	else if ( readMap )
+	{
+		int row = 0;
+                int col = 0;
+                char cha;
+                while ( file.get(cha) )
+                {
+                        if (col == 0 )//edit
+                        {
+                                theFloor.emplace_back();
+                        }
+                        if ( col >= 0 && col < 80 )//ediy
+                        {
+                                Cell *cell = new Cell( cha, row, col );
+                                theFloor[row].emplace_back( cell );
+				if ( cha == '@') theFloor[row][col]->set( mainChar );
+				else if ( cha == 'H' )
+				{
+					Human *ene = new Human;
+					theEnemies.emplace_back( ene );
+					theFloor[row][col]->set( ene );
+				}
+				else if ( cha == 'W' )
+				{
+                                        Dwarf *ene = new Dwarf;
+                                        theEnemies.emplace_back( ene );
+                                        theFloor[row][col]->set( ene );
+                                }                
+				else if ( cha == 'E' )
+				{
+                                        Elf *ene = new Elf;
+                                        theEnemies.emplace_back( ene );
+                                        theFloor[row][col]->set( ene );
+                                }
+				else if ( cha == 'O' )
+				{
+                                        Orc *ene = new Orc;
+                                        theEnemies.emplace_back( ene );
+                                        theFloor[row][col]->set( ene );
+                                }
+				else if ( cha == 'M' )
+				{
+                                        Merchant *ene = new Merchant;
+                                        theEnemies.emplace_back( ene );
+                                        theFloor[row][col]->set( ene );
+                                }
+				else if ( cha == 'D' )
+				{
+                                        Dragon *ene = new Dragon;
+                                        theDragons.emplace_back( ene );
+                                        theFloor[row][col]->set( ene );
+                                }
+				else if ( cha == 'L' )
+				{
+                                        Halfling *ene = new Halfling;
+                                        theEnemies.emplace_back( ene );
+                                        theFloor[row][col]->set( ene );
+                                }
+                                if ( row != 0 && col != 0 )
+                                {
+                                        cell->link( theFloor[row-1][col] ); // link to the left
+                                        cell->link( theFloor[row-1][col-1] ); // link up left
+                                        cell->link( theFloor[row][col-1] ); // link up
+                                }
+                                else if ( row != 0 ) cell->link( theFloor[row-1][col] );
+                                else if ( col != 0 ) cell->link( theFloor[row][col-1] );
+                                if ( row != 0 && col != 79 ) cell->link( theFloor[row-1][col+1] );
+                                ++col;
+                        }
+                        if ( col == 80 )
+                        {
+                                col = 0;
+                                ++row;
+                        }
+                }
 	}
 }
 

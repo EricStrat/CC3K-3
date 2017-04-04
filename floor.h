@@ -26,6 +26,7 @@ class Floor
   std::vector<std::vector<Cell*>> theFloor;
   std::vector<Chamber*> theChambers;
   std::vector<Character*> theEnemies;
+  std::vector<Character*> theDragons;
   std::string action; 
   bool readMap;
   int level, len, wid;
@@ -35,7 +36,7 @@ class Floor
   
   std::ifstream& file;
 
-  Floor( int lvl, std::ifstream& file, bool readMap, std::string cmd );
+  Floor( bool readMap, int lvl, std::ifstream& file, std::string cmd );
   ~Floor();
   void clearFloor();
   void move( Character* cp1, std::string direction );

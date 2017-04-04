@@ -26,6 +26,61 @@ Cell::Cell( char sym, int r, int c) : cp{nullptr}, row{r}, col{c}
 		tre = false; 
 		dh = false;
 	}
+	else if ( sym == '.' ) 
+	{
+		symbol = '.';
+                name = "tile";
+                pmov = true;
+                emov = true;
+                stair = false;
+                pot = false;
+                tre = false;
+                dh = false;
+	}
+	else if ( sym == '@' )
+	{
+		symbol = '.';
+		name = "tile";
+		pmov = true;
+		emov = false;
+		stair = false;
+		pot = false;
+		tre = false;
+		dh = false;
+	}
+	else if ( sym == 'H' || sym == 'W' || sym == 'E' || sym == 'O' || sym == 'M' || sym == 'D' || sym == 'L' )
+	{
+		symbol = '.';
+                name = "tile";
+                pmov = false;
+                emov = false;
+                stair = false;
+                pot = false;
+                tre = false;
+                dh = false;
+	}
+	else if ( sym == 'P' )
+	{
+		symbol = '.';
+                name = "tile";
+                pmov = true;
+                emov = false;
+                stair = false;
+                pot = true;
+                tre = false;
+                dh = false;
+	}
+	else if ( sym == 'G' )
+	{
+		symbol = '.';
+                name = "tile";
+                pmov = true;
+                emov = false;
+                stair = false;
+                pot = false;
+                tre = false;
+                dh = false;
+	}	
 	else {
 		symbol = sym;
 		if ( sym == '#' )
